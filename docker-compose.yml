@@ -1,0 +1,8 @@
+services:
+  pdns-mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PDNS_ADMIN_URL: ${PDNS_ADMIN_URL}
+      PDNS_API_KEY: ${PDNS_API_KEY}
