@@ -1,42 +1,87 @@
 # pdns-mcp-server
 
-MCP server for PowerDNS DNS record management via PowerDNS-Admin API.
+MCP-сервер для управления DNS записями PowerDNS через API PowerDNS-Admin.
 
-## Структура проекта
+## Архитектура
 
 ```
 src/pdns_mcp_server/
   __init__.py
-  config.py      — Конфигурация (pydantic-settings)
-  client.py      — HTTP-клиент для PowerDNS-Admin API
-  tools.py       — MCP инструменты для управления DNS записями
-  main.py        — Точка входа FastMCP сервера
+  config.py    — PdnsConfig: чтение конфигурации из переменных окружения
+  client.py    — PdnsClient: async HTTP-клиент для PowerDNS-Admin API
+  tools.py     — create_app(): регистрация MCP инструментов
+  main.py      — точка входа, запуск streamable-http сервера
 tests/
   __init__.py
-  test_config.py — Тесты конфигурации
-  test_client.py — Тесты API-клиента (respx моки)
-  test_tools.py  — Тесты MCP инструментов
-  test_main.py   — Тесты точки входа
-docs/
-  README.md      — Этот файл
-  usage.md       — Примеры запуска и использования
+  test_config.py   — 5 тестов конфигурации
+  test_client.py   — 8 тестов API-клиента (respx моки)
+  test_tools.py    — 6 тестов инструментов
+  test_main.py     — 2 теста точки входа
 ```
 
 ## Конфигурация
 
-Переменные окружения (префикс `PDNS_`):
+Переменные окружения:
 
-| Переменная | По умолчанию | Описание |
-|---|---|---|
-| `PDNS_ADMIN_URL` | — | URL PowerDNS-Admin (обязательно) |
-| `PDNS_API_KEY` | — | API-ключ для X-API-Key аутентификации (обязательно) |
-| `PDNS_SERVER_ID` | `localhost` | ID сервера PowerDNS |
-| `PDNS_PORT` | `8000` | Порт MCP сервера |
+| Переменная | Обязательно | По умолчанию | Описание |
+|---|---|---|---|
+| `PDNS_ADMIN_URL` | Да | — | URL PowerDNS-Admin (например `http://pda.example.com:9191`) |
+| `PDNS_API_KEY` | Да | — | API-ключ для X-API-Key аутентификации |
+| `PDNS_SERVER_ID` | Нет | `localhost` | ID сервера PowerDNS |
+| `PDNS_PORT` | Нет | `8000` | Порт MCP сервера |
 
 ## Инструменты MCP
 
-- `list_zones` — список всех DNS зон
-- `get_zone(zone_id)` — информация о зоне с записями
-- `create_record(zone_id, name, type, content, ttl)` — создать/заменить RRset
-- `update_record(zone_id, name, type, content, ttl)` — обновить запись
-- `delete_record(zone_id, name, type)` — удалить RRset
+### list_zones
+Список всех DNS зон. Без аргументов.
+
+### get_zone
+Полная информация о зоне с ресурсными записями.
+
+| Параметр | Тип | Описание |
+|---|---|---|
+| `zone_id` | `str` | Имя зоны (e.g. `example.com` или `example.com.`) |
+
+### create_record
+Создание или замена DNS записи в зоне.
+
+| Параметр | Тип | По умолч. | Описание |
+|---|---|---|---|
+| `zone_id` | `str` | — | Имя зоны |
+| `name` | `str` | — | Полное имя записи (e.g. `www.example.com`) |
+| `type` | `str` | — | Тип записи: `A`, `AAAA`, `CNAME`, `MX`, `TXT`, etc. |
+| `content` | `str` | — | Содержимое записи |
+| `ttl` | `int` | `3600` | TTL в секундах |
+
+### update_record
+Обновление существующей записи. Параметры идентичны `create_record`.
+
+### delete_record
+Удаление всех записей с указанным именем и типом.
+
+| Параметр | Тип | Описание |
+|---|---|---|
+| `zone_id` | `str` | Имя зоны |
+| `name` | `str` | Полное имя записи для удаления |
+| `type` | `str` | Тип записи |
+
+## Запуск
+
+```bash
+# Установить переменные окружения
+export PDNS_ADMIN_URL=http://pda.example.com:9191
+export PDNS_API_KEY=your-api-key-here
+
+# Запуск сервера
+uv run pdns-mcp-server
+```
+
+Сервер будет доступен на `http://0.0.0.0:8000` с транспортом `streamable-http`.
+
+## Тестирование
+
+```bash
+uv run pytest -v
+```
+
+Все тесты используют `respx` для мокирования HTTP-вызовов — не требуют реального PowerDNS.
