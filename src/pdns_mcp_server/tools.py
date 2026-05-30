@@ -88,7 +88,11 @@ def create_app(config: PdnsConfig | None = None, client: PdnsClient | None = Non
             config = PdnsConfig.from_env()
         client = PdnsClient(config)
 
-    mcp = FastMCP("pdns-mcp-server")
+    mcp = FastMCP(
+        "pdns-mcp-server",
+        json_response=True,
+        stateless_http=True,
+    )
 
     @mcp.tool()
     async def list_zones() -> str:
