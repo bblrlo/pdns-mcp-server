@@ -82,9 +82,11 @@ async def _delete_record(
     return f"Record deleted: {name} {type.upper()}"
 
 
-def create_app(client: PdnsClient | None = None) -> FastMCP:
+def create_app(config: PdnsConfig | None = None, client: PdnsClient | None = None) -> FastMCP:
     if client is None:
-        client = PdnsClient(PdnsConfig.from_env())
+        if config is None:
+            config = PdnsConfig.from_env()
+        client = PdnsClient(config)
 
     mcp = FastMCP("pdns-mcp-server")
 
