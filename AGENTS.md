@@ -59,3 +59,17 @@ tests/
 - Перед commit: `uv run pytest -v` — все тесты зелёные
 - При изменении API или инструментов — обновлять `docs/`
 - `graphify-out/` — сгенерированный граф, не трогать вручную
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+All five canonical roles use their default names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout. See `docs/agents/domain.md`.
