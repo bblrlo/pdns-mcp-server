@@ -6,6 +6,7 @@ from mcp.server.fastmcp import FastMCP
 
 from pdns_mcp_server.client import PdnsClient
 from pdns_mcp_server.config import PdnsConfig
+from pdns_mcp_server.rrset import RRset
 
 
 async def _list_zones(client: PdnsClient) -> str:
@@ -39,46 +40,24 @@ async def _get_zone(client: PdnsClient, zone_id: str) -> str:
 async def _create_record(
     client: PdnsClient, zone_id: str, name: str, type: str, content: str, ttl: int = 3600
 ) -> str:
-    rrsets = [
-        {
-            "name": name if name.endswith(".") else f"{name}.",
-            "type": type.upper(),
-            "ttl": ttl,
-            "changetype": "REPLACE",
-            "records": [{"content": content, "disabled": False}],
-        }
-    ]
-    await client.patch_zone(zone_id, rrsets)
+    rrset = RRset(name=name, type=type, ttl=ttl, content=content, changetype="REPLACE")
+    await client.patch_zone(zone_id, [rrset.to_dict()])
     return f"Record created: {name} {ttl} {type.upper()} {content}"
 
 
 async def _update_record(
     client: PdnsClient, zone_id: str, name: str, type: str, content: str, ttl: int = 3600
 ) -> str:
-    rrsets = [
-        {
-            "name": name if name.endswith(".") else f"{name}.",
-            "type": type.upper(),
-            "ttl": ttl,
-            "changetype": "REPLACE",
-            "records": [{"content": content, "disabled": False}],
-        }
-    ]
-    await client.patch_zone(zone_id, rrsets)
+    rrset = RRset(name=name, type=type, ttl=ttl, content=content, changetype="REPLACE")
+    await client.patch_zone(zone_id, [rrset.to_dict()])
     return f"Record updated: {name} {ttl} {type.upper()} {content}"
 
 
 async def _delete_record(
     client: PdnsClient, zone_id: str, name: str, type: str
 ) -> str:
-    rrsets = [
-        {
-            "name": name if name.endswith(".") else f"{name}.",
-            "type": type.upper(),
-            "changetype": "DELETE",
-        }
-    ]
-    await client.patch_zone(zone_id, rrsets)
+    rrset = RRset(name=name, type=type, changetype="DELETE")
+    await client.patch_zone(zone_id, [rrset.to_dict()])
     return f"Record deleted: {name} {type.upper()}"
 
 
